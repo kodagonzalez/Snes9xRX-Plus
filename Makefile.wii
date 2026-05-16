@@ -27,7 +27,7 @@ INCLUDES	:=	source source/snes9x
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O3 -Wall $(MACHDEP) $(INCLUDE) `freetype-config --cflags` \
+CFLAGS	= -g -O3 -Wall $(MACHDEP) $(INCLUDE) -I/opt/devkitpro/portlibs/ppc/include/freetype2 \
 				-DHAVE_STDINT_H -DBLARGG_NONPORTABLE -DBLARGG_BIG_ENDIAN -DBLARGG_CPU_POWERPC \
 				-DZLIB -DRIGHTSHIFT_IS_SAR -DCPU_SHUTDOWN -DCORRECT_VRAM_READS \
 				-D_SZ_ONE_DIRECTORY -D_LZMA_IN_CB -D_LZMA_OUT_READ \
@@ -44,7 +44,7 @@ LDFLAGS +=	-L../buildtools
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-ldi -liso9660 -lpng -lmxml `freetype-config --libs` \
+LIBS	:=	-ldi -liso9660 -lpng -lmxml -lfreetype -lbz2 -lbrotlidec -lbrotlicommon \
 			-lfat -lwiiuse -lz -lbte -lasnd -logc -lvorbisidec -logg -ltinysmb
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -72,9 +72,9 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.ttf) \
-					$(wildcard $(dir)/*.lang) $(wildcard $(dir)/*.png) \
-					$(wildcard $(dir)/*.ogg) $(wildcard $(dir)/*.pcm)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(CURDIR)/$(dir)/*.ttf) \
+				$(wildcard $(CURDIR)/$(dir)/*.lang) $(wildcard $(CURDIR)/$(dir)/*.png) \
+				$(wildcard $(CURDIR)/$(dir)/*.ogg) $(wildcard $(CURDIR)/$(dir)/*.pcm)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
