@@ -25,9 +25,8 @@ jobs:
 
           docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc '
             cd /project && 
-            export BINFILES="$(find source/images source/sounds source/fonts source/lang -maxdepth 1 \( -name \"*.ttf\" -o -name \"*.lang\" -o -name \"*.png\" -o -name \"*.ogg\" -o -name \"*.pcm\" \) -printf \"%f \" | sed \"s/ $//\")" && 
-            echo "BINFILES=$BINFILES" && 
-            make wii
+            bashexport BINFILES="$(cd /project && ls source/lang/*.lang source/fonts/*.ttf source/images/*.png source/sounds/*.ogg 2>/dev/null | xargs -I{} basename {})" && echo "BINFILES=$BINFILES" && 
+            make wii BINFILES="$BINFILES"
           '
 
       - name: Upload Wii binary artifact
