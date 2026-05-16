@@ -72,9 +72,9 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(CURDIR)/$(dir)/*.ttf) \
-				$(wildcard $(CURDIR)/$(dir)/*.lang) $(wildcard $(CURDIR)/$(dir)/*.png) \
-				$(wildcard $(CURDIR)/$(dir)/*.ogg) $(wildcard $(CURDIR)/$(dir)/*.pcm)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.ttf) \
+				$(wildcard $(dir)/*.lang) $(wildcard $(dir)/*.png) \
+				$(wildcard $(dir)/*.ogg) $(wildcard $(dir)/*.pcm)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
