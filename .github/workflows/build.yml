@@ -1,0 +1,27 @@
+name: Build Wii
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build with devkitPPC Docker image
+        run: |
+          docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc "cd /project && make wii"
+
+      - name: Upload Wii binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snes9xrx-wii-dol
+          path: executables/snes9xrx-wii.dol
