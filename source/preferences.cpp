@@ -26,6 +26,7 @@
 #include "button_mapping.h"
 
 #include "snes9x/apu/apu.h"
+#include "snes9x/memmap.h"
 
 struct SGCSettings GCSettings;
 
@@ -88,7 +89,7 @@ static const char * XMLSaveCallback(mxml_node_t *node, int where)
 {
 	const char *name;
 
-	name = node->value.element.name;
+	name = mxmlGetElement(node);
 
 	if(where == MXML_WS_BEFORE_CLOSE)
 	{
@@ -804,4 +805,150 @@ bool LoadPrefs()
 	LoadBgMusic();
 #endif
 	return prefFound;
+}
+
+static int prepareGamePrefsData()
+{
+	xml = mxmlNewXML("1.0");
+	mxmlSetWrapMargin(0);
+
+	data = mxmlNewElement(xml, "file");
+	mxmlElementSetAttr(data, "app", APPNAME);
+	mxmlElementSetAttr(data, "version", APPVERSION);
+
+	createXMLSection("Controller", "Controller Settings");
+
+	createXMLController(btnmap[CTRL_PAD][CTRLR_GCPAD], "btnmap_pad_gcpad", "SNES Pad - GameCube Controller");
+#ifdef HW_RVL
+	createXMLController(btnmap[CTRL_PAD][CTRLR_WIIMOTE], "btnmap_pad_wiimote", "SNES Pad - Wiimote");
+	createXMLController(btnmap[CTRL_PAD][CTRLR_CLASSIC], "btnmap_pad_classic", "SNES Pad - Classic Controller");
+	createXMLController(btnmap[CTRL_PAD][CTRLR_WUPC], "btnmap_pad_wupc", "SNES Pad - Wii U Pro Controller");
+	createXMLController(btnmap[CTRL_PAD][CTRLR_WIIDRC], "btnmap_pad_wiidrc", "SNES Pad - Wii U Gamepad");
+	createXMLController(btnmap[CTRL_PAD][CTRLR_NUNCHUK], "btnmap_pad_nunchuk", "SNES Pad - Nunchuk + Wiimote");
+#endif
+	createXMLController(btnmap[CTRL_SCOPE][CTRLR_GCPAD], "btnmap_scope_gcpad", "Super Scope - GameCube Controller");
+#ifdef HW_RVL
+	createXMLController(btnmap[CTRL_SCOPE][CTRLR_WIIMOTE], "btnmap_scope_wiimote", "Super Scope - Wiimote");
+#endif
+	createXMLController(btnmap[CTRL_MOUSE][CTRLR_GCPAD], "btnmap_mouse_gcpad", "Mouse - GameCube Controller");
+#ifdef HW_RVL
+	createXMLController(btnmap[CTRL_MOUSE][CTRLR_WIIMOTE], "btnmap_mouse_wiimote", "Mouse - Wiimote");
+#endif
+	createXMLController(btnmap[CTRL_JUST][CTRLR_GCPAD], "btnmap_just_gcpad", "Justifier - GameCube Controller");
+#ifdef HW_RVL
+	createXMLController(btnmap[CTRL_JUST][CTRLR_WIIMOTE], "btnmap_just_wiimote", "Justifier - Wiimote");
+#endif
+
+	int datasize = mxmlSaveString(xml, (char *)savebuffer, SAVEBUFFERSIZE, XMLSaveCallback);
+
+	mxmlDelete(xml);
+
+	return datasize;
+}
+
+bool
+SaveGamePrefs (bool silent)
+{
+	char filepath[MAXPATHLEN];
+	int device = 0;
+
+	if(prefpath[0] != 0)
+	{
+		sprintf(filepath, "%s/%08X.xml", prefpath, Memory.ROMCRC32);
+	}
+	else if(appPath[0] != 0)
+	{
+		sprintf(filepath, "%s/%08X.xml", appPath, Memory.ROMCRC32);
+		strcpy(prefpath, appPath);
+	}
+	else
+	{
+		device = autoSaveMethod(silent);
+
+		if(device == 0)
+			return false;
+
+		sprintf(filepath, "%s%s", pathPrefix[device], APPFOLDER);
+		DIR *dir = opendir(filepath);
+		if (!dir)
+		{
+			if(mkdir(filepath, 0777) != 0)
+				return false;
+			sprintf(filepath, "%s%s/roms", pathPrefix[device], APPFOLDER);
+			if(mkdir(filepath, 0777) != 0)
+				return false;
+			sprintf(filepath, "%s%s/saves", pathPrefix[device], APPFOLDER);
+			if(mkdir(filepath, 0777) != 0)
+				return false;
+		}
+		else
+		{
+			closedir(dir);
+		}
+		sprintf(filepath, "%s%s/%08X.xml", pathPrefix[device], APPFOLDER, Memory.ROMCRC32);
+		sprintf(prefpath, "%s%s", pathPrefix[device], APPFOLDER);
+	}
+
+	if(prefpath[0] == 0)
+		return false;
+
+	if (!silent)
+		ShowAction ("Saving preferences...");
+
+	FixInvalidSettings();
+
+	AllocSaveBuffer ();
+	int datasize = prepareGamePrefsData ();
+	int offset = SaveFile(filepath, datasize, silent);
+
+	FreeSaveBuffer ();
+
+	CancelAction();
+
+	if (offset > 0)
+	{
+		if (!silent)
+			InfoPrompt("Preferences saved");
+		return true;
+	}
+	return false;
+}
+
+bool
+LoadGamePrefs (const char * filename)
+{
+	char filepath[MAXPATHLEN];
+	const char * usefile = filename;
+	bool retval = false;
+	int offset = 0;
+
+	if(usefile == NULL || usefile[0] == '\0')
+	{
+		if(prefpath[0] != 0)
+			sprintf(filepath, "%s/%08X.xml", prefpath, Memory.ROMCRC32);
+		else if(appPath[0] != 0)
+			sprintf(filepath, "%s/%08X.xml", appPath, Memory.ROMCRC32);
+		else
+			return false;
+
+		usefile = filepath;
+	}
+
+	AllocSaveBuffer ();
+	offset = LoadFile((char *)usefile, SILENT);
+
+	if (offset > 0)
+		retval = decodePrefsData ();
+
+	FreeSaveBuffer ();
+
+	return retval;
+}
+
+bool
+ReloadPrefs ()
+{
+	if(prefpath[0] != 0)
+		return LoadPrefsFromMethod(prefpath);
+	return LoadPrefs();
 }
