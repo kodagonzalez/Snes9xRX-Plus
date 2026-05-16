@@ -18,6 +18,11 @@ jobs:
 
       - name: Build with devkitPPC Docker image
         run: |
+          # Patch Makefile.wii to use bundled devkitPPC freetype include/libs and add extra libs
+          sed -i 's/`freetype-config --cflags`/-I\/opt\/devkitpro\/portlibs\/ppc\/include\/freetype2/' Makefile.wii
+          sed -i 's/`freetype-config --libs`/-lfreetype/' Makefile.wii
+          sed -i 's/-ldi -liso9660 -lpng -lmxml -lfreetype/-ldi -liso9660 -lpng -lmxml -lfreetype -lbz2 -lbrotlidec -lbrotlicommon/' Makefile.wii
+
           docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc "cd /project && make wii"
 
       - name: Upload Wii binary artifact
