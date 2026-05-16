@@ -25,7 +25,7 @@ jobs:
 
           docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc '
             cd /project && 
-            bashexport BINFILES="$(cd /project && ls source/lang/*.lang source/fonts/*.ttf source/images/*.png source/sounds/*.ogg 2>/dev/null | xargs -I{} basename {})" && echo "BINFILES=$BINFILES" && 
+            export BINFILES="$(cd /project && ls source/lang/*.lang source/fonts/*.ttf source/images/*.png source/sounds/*.ogg 2>/dev/null | xargs -I{} basename {})" && echo "BINFILES=$BINFILES" && 
             make wii BINFILES="$BINFILES"
           '
 
