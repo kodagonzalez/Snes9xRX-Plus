@@ -23,7 +23,12 @@ jobs:
           sed -i 's/`freetype-config --libs`/-lfreetype/' Makefile.wii
           sed -i 's/-ldi -liso9660 -lpng -lmxml -lfreetype/-ldi -liso9660 -lpng -lmxml -lfreetype -lbz2 -lbrotlidec -lbrotlicommon/' Makefile.wii
 
-          docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc "cd /project && make wii"
+          docker run --rm -v "$PWD":/project devkitpro/devkitppc bash -lc '
+            cd /project && 
+            export BINFILES="$(find source/images source/sounds source/fonts source/lang -maxdepth 1 \( -name \"*.ttf\" -o -name \"*.lang\" -o -name \"*.png\" -o -name \"*.ogg\" -o -name \"*.pcm\" \) -printf \"%f \" | sed \"s/ $//\")" && 
+            echo "BINFILES=$BINFILES" && 
+            make wii
+          '
 
       - name: Upload Wii binary artifact
         uses: actions/upload-artifact@v4
